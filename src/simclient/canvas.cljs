@@ -1,15 +1,26 @@
 (ns simclient.canvas
   (:require [simclient.dom]
             [simclient.transform]
-            [simclient.landmark]))
+            [simclient.landmark]
+            [clojure.string]))
 
 (def canvas-width 300)
 (def canvas-height 300)
+(def ^:dynamic *id* 0)
+
+(defn record-landmark!
+  [landmark id]
+  (let [landmark-div (. js/document getElementById "landmark-store")
+        inner-html #(. landmark-div -innerHTML)
+        landmark-fixed [(double (. (first landmark) toFixed 2))
+                        (double (. (second landmark) toFixed 2))]]
+    (set! *id* (+ *id* 1))
+    (set! (. landmark-div -innerHTML)
+          (str (inner-html) "<span id=" *id* ">" *id* ": " landmark-fixed "</span><br />"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; HTML5 Canvas Functions ;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 (defn get-canvas [canvas-id]
   (. js/document getElementById canvas-id))
 
@@ -18,7 +29,6 @@
 
 (defn draw-point!
   [context x y r g b]
-  (. js/console log (str "rgb(" r "," g "," b")"))
   (set! (. context -strokeStyle) (str "rgb(" r "," g "," b ")"))
   (. context strokeRect x y 1 1))
 
@@ -53,9 +63,13 @@
         landmarks (simclient.landmark/make-landmarks lmk-count)
         to-screen #(simclient.transform/cart-to-screen
                     (first %) (second %) canvas-height canvas-width)
-        screen-lmks (map to-screen landmarks)]
+        screen-lmks (map to-screen landmarks)
+        landmark-div (. js/document getElementById "landmark-store")]
     (. js/console log (count landmarks))
     (clear-canvas! ctx)
+    (set! *id* 0)
+    (set! (. landmark-div -innerHTML) "")
+    (doall (map record-landmark! landmarks))
     (doall (map #(draw-point! ctx (first %) (second %) "00" "00" "00")
                 screen-lmks))))
 
@@ -67,7 +81,7 @@
         to-screen #(simclient.transform/cart-to-screen
                     (first %) (second %) canvas-height canvas-width)
         screen-lmks (map to-screen landmarks)]
-    (. js/console log (count landmarks))
+
     (doall (map #(draw-point! ctx (first %) (second %) "00" "88" "00")
                 screen-lmks))))
 

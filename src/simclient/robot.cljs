@@ -6,11 +6,19 @@
 
 (defn angular-distance
   [pose point]
-  nil)
+  (let [[x y a] pose
+        [x' y'] point
+        xdist (- x' x)
+        ydist (- y' y)]
+    (Math/atan2 ydist xdist)))
 
 (defn euclidian-distance
   [pose point]
-  nil)
+  (let [[x y a] pose
+        [x' y'] point
+        xdist (- x' x)
+        ydist (- y' y)]
+   (Math/sqrt (+ (* xdist xdist) (* ydist ydist)))))
 
 (defn plan
   [pose waypoint]
